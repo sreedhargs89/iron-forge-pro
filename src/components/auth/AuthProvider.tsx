@@ -27,8 +27,17 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                 const existingUser = await db.userProfiles.get(DEFAULT_USER_ID);
 
                 if (!existingUser) {
+                    // Create default user profile
+                    await db.userProfiles.add({
+                        id: DEFAULT_USER_ID,
+                        email: 'athlete@ironforge.app',
+                        name: 'Athlete',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+
                     // Seed database for default user
-                    await seedDatabase(DEFAULT_USER_ID, 'Athlete', 'athlete@ironforge.app');
+                    await seedDatabase(DEFAULT_USER_ID);
                 }
 
                 // Load user data
