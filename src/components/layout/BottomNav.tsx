@@ -1,18 +1,14 @@
 'use client';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// BOTTOM NAVIGATION COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, Settings, User, Dumbbell } from 'lucide-react';
+import { Home, Dumbbell, BarChart3, Settings } from 'lucide-react';
 
 const navItems = [
-    { href: '/dashboard', icon: Home, label: 'HOME' },
-    { href: '/workout', icon: Dumbbell, label: 'WORKOUT' },
-    { href: '/progress', icon: BarChart3, label: 'PROGRESS' },
-    { href: '/settings', icon: Settings, label: 'SETTINGS' },
+    { href: '/dashboard', icon: Home, label: 'Home' },
+    { href: '/workout', icon: Dumbbell, label: 'Train' },
+    { href: '/progress', icon: BarChart3, label: 'Stats' },
+    { href: '/settings', icon: Settings, label: 'More' },
 ];
 
 export default function BottomNav() {
@@ -27,11 +23,32 @@ export default function BottomNav() {
                     <Link
                         key={href}
                         href={href}
-                        className="flex flex-col items-center gap-0.5 px-4 py-1 transition-colors"
-                        style={{ color: isActive ? '#fff' : '#555' }}
+                        className="flex flex-col items-center gap-0.5 py-1 relative"
+                        style={{ width: '64px' }}
                     >
-                        <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className="text-[10px] font-semibold tracking-wide">{label}</span>
+                        <div
+                            className="flex items-center justify-center w-10 h-7 rounded-full transition-all duration-200"
+                            style={{
+                                background: isActive ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                            }}
+                        >
+                            <Icon
+                                size={20}
+                                strokeWidth={isActive ? 2.5 : 1.8}
+                                style={{
+                                    color: isActive ? '#ef4444' : '#52525b',
+                                    transition: 'color 200ms ease',
+                                }}
+                            />
+                        </div>
+                        <span
+                            className="text-[10px] font-medium transition-colors duration-200"
+                            style={{
+                                color: isActive ? '#fafafa' : '#52525b',
+                            }}
+                        >
+                            {label}
+                        </span>
                     </Link>
                 );
             })}
