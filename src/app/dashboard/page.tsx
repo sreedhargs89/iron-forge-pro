@@ -1,14 +1,33 @@
 'use client';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DASHBOARD PAGE
-// ═══════════════════════════════════════════════════════════════════════════
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWorkoutStore } from '@/lib/store/workout-store';
 import BottomNav from '@/components/layout/BottomNav';
-import { ChevronLeft, ChevronRight, Play, Check, Flame } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, CheckCircle2, Zap, Trophy, Target } from 'lucide-react';
+
+function ProgressRing({ progress, size = 64, strokeWidth = 5, color = '#ef4444' }: { progress: number; size?: number; strokeWidth?: number; color?: string }) {
+    const r = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * r;
+    const offset = circumference * (1 - progress / 100);
+
+    return (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            <circle
+                cx={size / 2} cy={size / 2} r={r}
+                fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth}
+            />
+            <circle
+                cx={size / 2} cy={size / 2} r={r}
+                fill="none" stroke={color} strokeWidth={strokeWidth}
+                strokeDasharray={circumference} strokeDashoffset={offset}
+                strokeLinecap="round"
+                transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}
+            />
+        </svg>
+    );
+}
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -21,99 +40,137 @@ export default function DashboardPage() {
 
     if (!mounted || !program) {
         return (
-            <div className="min-h-screen flex items-center justify-center pb-20">
-                <div className="w-8 h-8 border-4 border-[var(--color-accent-red)] border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-8 h-8 border-3 border-[var(--color-accent-red)] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
     const weekProgress = getWeekProgress(currentWeek);
+    const completedDays = program.days.filter(d => getDayProgress(currentWeek, d.id) === 100).length;
+    const phaseName = currentWeek <= 4 ? 'Foundation' : currentWeek <= 8 ? 'Build' : 'Peak';
+    const phaseColor = currentWeek <= 4 ? '#ef4444' : currentWeek <= 8 ? '#f97316' : '#22c55e';
 
     return (
         <div className="pb-24 safe-area-bottom">
-            <div className="px-4 pt-6">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-4">
+            {/* Hero Header */}
+            <div
+                className="px-5 pt-14 pb-6 relative overflow-hidden"
+                style={{
+                    background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, transparent 100%)',
+                }}
+            >
+                {/* Decorative gradient orb */}
+                <div
+                    className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20"
+                    style={{ background: 'radial-gradient(circle, #ef4444, transparent)' }}
+                />
+
+                <div className="flex justify-between items-start relative">
                     <div>
                         <h1
-                            className="text-2xl font-black tracking-tight"
+                            className="text-3xl font-black tracking-tight"
                             style={{
-                                background: 'linear-gradient(135deg, #E63946, #F4A261)',
+                                background: 'linear-gradient(135deg, #fafafa, #71717a)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
                             }}
                         >
                             IRON FORGE
                         </h1>
-                        <p className="text-[11px] text-[var(--color-text-secondary)] mt-0.5">
-                            A 12-WEEK HYPERTROPHY-FOCUSED MUSCLE BUILDING PROGRAM WITH A 6-DAY PUSH/PULL/LEGS SPLIT
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: `${phaseColor}20`, color: phaseColor }}
+                            >
+                                {phaseName} Phase
+                            </span>
+                            <span className="text-xs text-[var(--color-text-muted)]">
+                                12-Week Program
+                            </span>
+                        </div>
                     </div>
 
                     {/* Week Selector */}
-                    <div className="flex items-center gap-1 bg-[rgba(255,255,255,0.04)] rounded-lg px-2 py-1">
+                    <div
+                        className="flex items-center gap-1 rounded-xl px-2.5 py-1.5"
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    >
                         <button
                             onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))}
-                            className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors"
+                            className="p-0.5 rounded-md transition-colors"
                             disabled={currentWeek <= 1}
+                            style={{ opacity: currentWeek <= 1 ? 0.3 : 1 }}
                         >
-                            <ChevronLeft size={14} className={currentWeek <= 1 ? 'opacity-30' : ''} />
+                            <ChevronLeft size={16} />
                         </button>
-                        <span className="text-xs font-bold min-w-[16px] text-center">{currentWeek}</span>
+                        <div className="text-center min-w-[40px]">
+                            <div className="text-xs font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
+                                W{currentWeek}
+                            </div>
+                        </div>
                         <button
                             onClick={() => setCurrentWeek(Math.min(12, currentWeek + 1))}
-                            className="p-1 hover:bg-[rgba(255,255,255,0.1)] rounded transition-colors"
+                            className="p-0.5 rounded-md transition-colors"
                             disabled={currentWeek >= 12}
+                            style={{ opacity: currentWeek >= 12 ? 0.3 : 1 }}
                         >
-                            <ChevronRight size={14} className={currentWeek >= 12 ? 'opacity-30' : ''} />
+                            <ChevronRight size={16} />
                         </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Welcome Message */}
+            <div className="px-5">
+                {/* Stats Row */}
                 <div
-                    className="rounded-xl p-4 mb-4"
-                    style={{
-                        background: 'linear-gradient(135deg, rgba(230, 57, 70, 0.1), rgba(244, 162, 97, 0.05))',
-                        border: '1px solid rgba(230, 57, 70, 0.2)',
-                    }}
+                    className="flex items-center justify-between rounded-2xl p-4 mb-6"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
-                    <div className="flex items-center gap-2 mb-1">
-                        <Flame size={16} style={{ color: '#F4A261' }} />
-                        <span className="text-sm font-semibold">Welcome back!</span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <ProgressRing progress={weekProgress} size={56} strokeWidth={4} color="#ef4444" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-sm font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
+                                    {weekProgress}%
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm font-semibold">Week {currentWeek} Progress</div>
+                            <div className="text-xs text-[var(--color-text-muted)]">
+                                {completedDays} of {program.days.length} workouts done
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-xs text-[var(--color-text-secondary)]">
-                        Week {currentWeek} • {weekProgress}% complete
-                    </p>
-                </div>
 
-                {/* Week Progress Bar */}
-                <div className="mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                            WEEK {currentWeek} PROGRESS
-                        </span>
-                        <span className="text-xs font-bold" style={{ color: '#4ADE80' }}>
-                            {weekProgress}%
-                        </span>
-                    </div>
-                    <div className="progress-bar">
-                        <div
-                            className="progress-bar-fill"
-                            style={{
-                                width: `${weekProgress}%`,
-                                background: 'linear-gradient(90deg, #E63946, #F4A261)',
-                            }}
-                        />
+                    <div className="flex gap-3">
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-9 h-9 rounded-xl mb-1" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
+                                <Zap size={16} style={{ color: '#ef4444' }} />
+                            </div>
+                            <div className="text-[10px] text-[var(--color-text-muted)]">W{currentWeek}</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-9 h-9 rounded-xl mb-1" style={{ background: 'rgba(34, 197, 94, 0.1)' }}>
+                                <Trophy size={16} style={{ color: '#22c55e' }} />
+                            </div>
+                            <div className="text-[10px] text-[var(--color-text-muted)]">{completedDays}/{program.days.length}</div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Workout Days */}
-                <h2 className="text-xs font-bold text-[var(--color-text-secondary)] tracking-wide mb-3">
-                    YOUR WORKOUTS
-                </h2>
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-bold text-[var(--color-text-secondary)] tracking-wider uppercase">
+                        Today&apos;s Split
+                    </h2>
+                    <span className="text-[10px] text-[var(--color-text-muted)]">
+                        {completedDays}/{program.days.length} complete
+                    </span>
+                </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                     {program.days.map((day, idx) => {
                         const progress = getDayProgress(currentWeek, day.id);
                         const isComplete = progress === 100;
@@ -121,106 +178,145 @@ export default function DashboardPage() {
                         return (
                             <div
                                 key={day.id}
-                                className="card px-4 py-3 flex items-center justify-between animate-fade-in cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                                className="animate-fade-in cursor-pointer rounded-2xl overflow-hidden transition-all active:scale-[0.98]"
                                 style={{
-                                    animationDelay: `${idx * 0.05}s`,
-                                    borderColor: isComplete ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                                    animationDelay: `${idx * 0.04}s`,
+                                    background: 'rgba(255, 255, 255, 0.03)',
+                                    border: `1px solid ${isComplete ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
                                 }}
                                 onClick={() => router.push(`/workout/${day.id}`)}
                             >
-                                <div className="flex items-center gap-3">
-                                    <span
-                                        className="text-lg"
-                                        style={{ filter: isComplete ? 'none' : 'grayscale(0.3)' }}
+                                <div className="flex items-center px-4 py-3.5">
+                                    {/* Left accent bar */}
+                                    <div
+                                        className="w-1 h-10 rounded-full mr-3.5 flex-shrink-0"
+                                        style={{
+                                            background: isComplete
+                                                ? '#22c55e'
+                                                : `linear-gradient(180deg, ${day.color}, ${day.color}60)`,
+                                        }}
+                                    />
+
+                                    {/* Icon */}
+                                    <div
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0"
+                                        style={{
+                                            background: isComplete ? 'rgba(34, 197, 94, 0.12)' : `${day.color}15`,
+                                        }}
                                     >
-                                        {day.emoji}
-                                    </span>
-                                    <div>
-                                        <div
-                                            className="font-bold text-sm"
-                                            style={{ color: day.color }}
-                                        >
-                                            {day.name}
+                                        <span className="text-lg">{day.emoji}</span>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-[15px]" style={{ color: isComplete ? '#22c55e' : '#fafafa' }}>
+                                                {day.name}
+                                            </span>
+                                            {isComplete && <CheckCircle2 size={14} style={{ color: '#22c55e' }} />}
                                         </div>
-                                        <div className="text-[10px] text-[var(--color-text-secondary)]">
+                                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5 truncate">
                                             {day.muscles}
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex items-center gap-3">
-                                    {progress > 0 && progress < 100 && (
-                                        <span className="text-[10px] text-[var(--color-text-secondary)]">
-                                            {progress}%
-                                        </span>
-                                    )}
-
-                                    <button
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                                        style={{
-                                            background: isComplete
-                                                ? 'rgba(74, 222, 128, 0.15)'
-                                                : `linear-gradient(135deg, ${day.color}20, ${day.color}10)`,
-                                            color: isComplete ? '#4ADE80' : day.color,
-                                            border: `1px solid ${isComplete ? 'rgba(74, 222, 128, 0.3)' : day.color + '30'}`,
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push(`/workout/${day.id}`);
-                                        }}
-                                    >
-                                        {isComplete ? (
-                                            <>
-                                                <Check size={12} strokeWidth={3} />
-                                                DONE
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Play size={10} fill="currentColor" />
-                                                START
-                                            </>
+                                    {/* Right: Progress or Action */}
+                                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                                        {progress > 0 && progress < 100 && (
+                                            <div className="relative w-8 h-8">
+                                                <ProgressRing progress={progress} size={32} strokeWidth={3} color={day.color} />
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <span className="text-[9px] font-bold" style={{ color: day.color }}>
+                                                        {progress}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         )}
-                                    </button>
+                                        {!isComplete && progress === 0 && (
+                                            <div
+                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                                                style={{
+                                                    background: `${day.color}15`,
+                                                    color: day.color,
+                                                }}
+                                            >
+                                                <Play size={10} fill="currentColor" />
+                                                Go
+                                            </div>
+                                        )}
+                                        {isComplete && (
+                                            <span className="text-xs font-semibold" style={{ color: '#22c55e' }}>
+                                                Done
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {/* Progress bar at bottom of card */}
+                                {progress > 0 && progress < 100 && (
+                                    <div className="h-0.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                        <div
+                                            className="h-full transition-all duration-500"
+                                            style={{ width: `${progress}%`, background: day.color }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
                 </div>
 
-                {/* Program Info */}
-                <div
-                    className="mt-6 rounded-xl p-4"
-                    style={{ background: 'rgba(255, 255, 255, 0.02)' }}
-                >
-                    <div className="text-[10px] font-bold text-[var(--color-text-secondary)] tracking-wide mb-2">
-                        6-DAY SPLIT
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                        Push → Pull → Legs → Rest → Upper → Lower → Core+Arms → Rest.
-                        Repeat. Progressive overload each week. Track everything.
-                    </p>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3 mt-6">
-                    <div className="card p-3 text-center">
-                        <div className="text-lg font-black" style={{ color: '#E63946' }}>
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-3 gap-2.5 mt-6">
+                    <div
+                        className="rounded-2xl p-3.5 text-center"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg mx-auto mb-2" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
+                            <Target size={16} style={{ color: '#ef4444' }} />
+                        </div>
+                        <div className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
                             {currentWeek}
                         </div>
-                        <div className="text-[9px] text-[var(--color-text-secondary)] mt-0.5">WEEK</div>
+                        <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">Week</div>
                     </div>
-                    <div className="card p-3 text-center">
-                        <div className="text-lg font-black" style={{ color: '#4ADE80' }}>
-                            {program.days.filter(d => getDayProgress(currentWeek, d.id) === 100).length}
+                    <div
+                        className="rounded-2xl p-3.5 text-center"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg mx-auto mb-2" style={{ background: 'rgba(34, 197, 94, 0.1)' }}>
+                            <CheckCircle2 size={16} style={{ color: '#22c55e' }} />
                         </div>
-                        <div className="text-[9px] text-[var(--color-text-secondary)] mt-0.5">COMPLETED</div>
+                        <div className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
+                            {completedDays}
+                        </div>
+                        <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">Done</div>
                     </div>
-                    <div className="card p-3 text-center">
-                        <div className="text-lg font-black" style={{ color: '#457B9D' }}>
+                    <div
+                        className="rounded-2xl p-3.5 text-center"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg mx-auto mb-2" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+                            <Zap size={16} style={{ color: '#3b82f6' }} />
+                        </div>
+                        <div className="text-lg font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
                             {weekProgress}%
                         </div>
-                        <div className="text-[9px] text-[var(--color-text-secondary)] mt-0.5">PROGRESS</div>
+                        <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">Progress</div>
                     </div>
+                </div>
+
+                {/* Program Info */}
+                <div
+                    className="mt-6 rounded-2xl p-4"
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                    <div className="text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider mb-2 uppercase">
+                        6-Day Split
+                    </div>
+                    <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                        Push &rarr; Pull &rarr; Legs &rarr; Rest &rarr; Upper &rarr; Lower &rarr; Core+Arms &rarr; Rest
+                    </p>
                 </div>
             </div>
 

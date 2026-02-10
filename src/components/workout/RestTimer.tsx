@@ -1,10 +1,7 @@
 'use client';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// REST TIMER COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-
 import { useState, useEffect, useRef } from 'react';
+import { RotateCcw } from 'lucide-react';
 
 interface RestTimerProps {
     seconds: number;
@@ -53,66 +50,62 @@ export default function RestTimer({ seconds, onComplete }: RestTimerProps) {
     const min = Math.floor(timeLeft / 60);
     const sec = timeLeft % 60;
 
-    const circumference = 2 * Math.PI * 18;
+    const size = 40;
+    const strokeWidth = 3;
+    const r = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * r;
     const strokeDashoffset = circumference * (1 - pct / 100);
 
     return (
-        <div className="flex items-center gap-2">
-            <div className="relative w-11 h-11">
-                <svg width="44" height="44" viewBox="0 0 44 44">
+        <div className="flex items-center gap-1.5">
+            <button
+                onClick={start}
+                className="relative flex items-center justify-center"
+                style={{ width: size, height: size }}
+            >
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                     <circle
-                        cx="22"
-                        cy="22"
-                        r="18"
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={r}
                         fill="none"
-                        stroke="rgba(255,255,255,0.1)"
-                        strokeWidth="3"
+                        stroke="rgba(255,255,255,0.06)"
+                        strokeWidth={strokeWidth}
                     />
                     <circle
-                        cx="22"
-                        cy="22"
-                        r="18"
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={r}
                         fill="none"
-                        stroke={isRunning ? '#4ADE80' : 'rgba(255,255,255,0.3)'}
-                        strokeWidth="3"
+                        stroke={isRunning ? '#22c55e' : 'rgba(255,255,255,0.2)'}
+                        strokeWidth={strokeWidth}
                         strokeDasharray={circumference}
                         strokeDashoffset={strokeDashoffset}
-                        transform="rotate(-90 22 22)"
+                        strokeLinecap="round"
+                        transform={`rotate(-90 ${size / 2} ${size / 2})`}
                         style={{ transition: 'stroke-dashoffset 1s linear' }}
                     />
                 </svg>
                 <div
-                    className="absolute inset-0 flex items-center justify-center text-[11px] font-bold"
+                    className="absolute inset-0 flex items-center justify-center"
                     style={{
-                        color: isRunning ? '#4ADE80' : '#ccc',
+                        color: isRunning ? '#22c55e' : '#a1a1aa',
                         fontFamily: 'var(--font-mono)',
+                        fontSize: '10px',
+                        fontWeight: 600,
                     }}
                 >
                     {min}:{String(sec).padStart(2, '0')}
                 </div>
-            </div>
-
-            <button
-                onClick={start}
-                className="px-2.5 py-1 rounded-md text-[11px] font-bold transition-all"
-                style={{
-                    background: isRunning ? '#EF4444' : '#4ADE80',
-                    color: isRunning ? '#fff' : '#000',
-                }}
-            >
-                {isRunning ? '⏸' : '▶'}
             </button>
 
-            {timeLeft !== seconds && (
+            {(isRunning || timeLeft !== seconds) && (
                 <button
                     onClick={reset}
-                    className="px-2 py-1 rounded-md text-[10px] transition-all"
-                    style={{
-                        background: 'rgba(255,255,255,0.1)',
-                        color: '#999',
-                    }}
+                    className="p-1 rounded-md transition-all"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: '#71717a' }}
                 >
-                    ↺
+                    <RotateCcw size={12} />
                 </button>
             )}
         </div>

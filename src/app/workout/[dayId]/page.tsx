@@ -1,15 +1,11 @@
 'use client';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// WORKOUT SESSION PAGE
-// ═══════════════════════════════════════════════════════════════════════════
-
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWorkoutStore } from '@/lib/store/workout-store';
 import RestTimer from '@/components/workout/RestTimer';
 import SetInput from '@/components/workout/SetInput';
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Clock, Dumbbell } from 'lucide-react';
+import { ArrowLeft, Check, CheckCircle2, ChevronDown, ChevronUp, Clock, Info } from 'lucide-react';
 
 function formatRest(seconds: number): string {
     if (seconds >= 60) {
@@ -42,7 +38,6 @@ export default function WorkoutDayPage() {
 
     const day = program?.days.find(d => d.id === dayId);
 
-    // Update elapsed time
     useEffect(() => {
         setMounted(true);
 
@@ -57,7 +52,6 @@ export default function WorkoutDayPage() {
         return () => clearInterval(interval);
     }, [isWorkoutActive, workoutStartTime]);
 
-    // Auto-start workout when page loads
     useEffect(() => {
         if (mounted && dayId && !isWorkoutActive) {
             startWorkout(dayId);
@@ -67,7 +61,7 @@ export default function WorkoutDayPage() {
     if (!mounted || !day) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-[var(--color-accent-red)] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-3 border-[var(--color-accent-red)] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
@@ -82,100 +76,124 @@ export default function WorkoutDayPage() {
     };
 
     return (
-        <div className="pb-6">
+        <div className="pb-8">
             {/* Header */}
-            <div className="sticky top-0 z-50 glass-dark px-4 py-3">
+            <div
+                className="sticky top-0 z-50 glass-dark px-5 py-3"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            >
                 <div className="flex justify-between items-center">
                     <button
                         onClick={handleBack}
-                        className="btn-ghost px-3 py-1.5 rounded-lg text-sm"
+                        className="flex items-center gap-1 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors"
                     >
-                        <ArrowLeft size={16} className="mr-1" />
-                        Back
+                        <ArrowLeft size={18} />
                     </button>
 
                     <div className="text-center">
-                        <div
-                            className="text-lg font-bold flex items-center gap-2"
-                            style={{ color: day.color }}
-                        >
-                            <span>{day.emoji}</span>
-                            {day.name}
+                        <div className="flex items-center gap-2">
+                            <span className="text-base">{day.emoji}</span>
+                            <span className="text-base font-bold" style={{ color: day.color }}>
+                                {day.name}
+                            </span>
                         </div>
-                        <div className="text-[10px] text-[var(--color-text-secondary)]">
-                            Week {currentWeek} • {day.muscles}
+                        <div className="text-[10px] text-[var(--color-text-muted)]">
+                            Week {currentWeek} &middot; {day.muscles}
                         </div>
                     </div>
 
-                    {isWorkoutActive && (
-                        <div className="text-right">
-                            <div
-                                className="text-lg font-bold flex items-center gap-1"
-                                style={{ color: '#4ADE80', fontFamily: 'var(--font-mono)' }}
+                    {isWorkoutActive ? (
+                        <div
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                            style={{ background: 'rgba(34, 197, 94, 0.1)' }}
+                        >
+                            <Clock size={13} style={{ color: '#22c55e' }} />
+                            <span
+                                className="text-sm font-bold"
+                                style={{ color: '#22c55e', fontFamily: 'var(--font-mono)' }}
                             >
-                                <Clock size={14} />
                                 {elapsed}m
-                            </div>
-                            <div className="text-[9px] text-[var(--color-text-secondary)]">ELAPSED</div>
+                            </span>
                         </div>
+                    ) : (
+                        <div className="w-14" />
                     )}
-
-                    {!isWorkoutActive && <div className="w-16" />}
                 </div>
             </div>
 
             {/* Exercises */}
-            <div className="px-4 pt-4 space-y-2">
+            <div className="px-4 pt-3 space-y-2.5">
                 {day.exercises.map((ex, exIdx) => {
                     const completed = getCompletedSets(currentWeek, day.id, ex.id, ex.sets);
                     const isExpanded = expandedExercise === ex.id;
                     const isComplete = completed === ex.sets;
+                    const progressPct = (completed / ex.sets) * 100;
 
                     return (
                         <div
                             key={ex.id}
-                            className="card overflow-hidden animate-fade-in"
+                            className="rounded-2xl overflow-hidden animate-fade-in"
                             style={{
-                                animationDelay: `${exIdx * 0.05}s`,
-                                borderColor: isComplete
-                                    ? 'rgba(74, 222, 128, 0.2)'
-                                    : 'rgba(255, 255, 255, 0.04)',
+                                animationDelay: `${exIdx * 0.04}s`,
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                border: `1px solid ${isComplete ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
                             }}
                         >
                             {/* Exercise Header */}
                             <div
                                 onClick={() => setExpandedExercise(isExpanded ? null : ex.id)}
-                                className="px-4 py-3 cursor-pointer flex justify-between items-center"
+                                className="px-4 py-3.5 cursor-pointer flex items-center gap-3"
                             >
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className="text-[11px] font-bold min-w-[20px]"
-                                            style={{ color: day.color }}
-                                        >
-                                            {exIdx + 1}
-                                        </span>
-                                        <span className="font-semibold text-[14px]">{ex.exerciseName}</span>
+                                {/* Number badge */}
+                                <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                                    style={{
+                                        background: isComplete ? 'rgba(34, 197, 94, 0.15)' : `${day.color}12`,
+                                        color: isComplete ? '#22c55e' : day.color,
+                                    }}
+                                >
+                                    {isComplete ? <CheckCircle2 size={16} /> : exIdx + 1}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-semibold text-[14px] truncate">
+                                        {ex.exerciseName}
                                     </div>
-                                    <div className="text-[11px] text-[var(--color-text-secondary)] mt-1 pl-7">
-                                        {ex.muscle} • {ex.sets}×{ex.reps} • Rest {formatRest(ex.restSeconds)}
+                                    <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                                        {ex.sets} &times; {ex.reps} &middot; {ex.muscle} &middot; Rest {formatRest(ex.restSeconds)}
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-shrink-0">
                                     <span
                                         className="text-xs font-bold"
-                                        style={{ color: isComplete ? '#4ADE80' : 'var(--color-text-secondary)' }}
+                                        style={{
+                                            fontFamily: 'var(--font-mono)',
+                                            color: isComplete ? '#22c55e' : 'var(--color-text-muted)',
+                                        }}
                                     >
                                         {completed}/{ex.sets}
                                     </span>
                                     {isExpanded ? (
-                                        <ChevronUp size={16} className="text-[var(--color-text-secondary)]" />
+                                        <ChevronUp size={16} style={{ color: '#52525b' }} />
                                     ) : (
-                                        <ChevronDown size={16} className="text-[var(--color-text-secondary)]" />
+                                        <ChevronDown size={16} style={{ color: '#52525b' }} />
                                     )}
                                 </div>
                             </div>
+
+                            {/* Mini progress bar */}
+                            {!isExpanded && completed > 0 && (
+                                <div className="h-0.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                    <div
+                                        className="h-full transition-all duration-500"
+                                        style={{
+                                            width: `${progressPct}%`,
+                                            background: isComplete ? '#22c55e' : day.color,
+                                        }}
+                                    />
+                                </div>
+                            )}
 
                             {/* Expanded Set Logging */}
                             {isExpanded && (
@@ -186,23 +204,27 @@ export default function WorkoutDayPage() {
                                     {/* Note */}
                                     {ex.note && (
                                         <div
-                                            className="text-[11px] py-2 mb-3 flex items-start gap-2"
-                                            style={{ color: day.color, opacity: 0.8 }}
+                                            className="flex items-start gap-2 text-[11px] py-2 px-3 mb-3 rounded-lg"
+                                            style={{
+                                                background: `${day.color}08`,
+                                                color: day.color,
+                                                border: `1px solid ${day.color}15`,
+                                            }}
                                         >
-                                            <span>💡</span>
-                                            <span className="italic">{ex.note}</span>
+                                            <Info size={13} className="mt-0.5 flex-shrink-0" style={{ opacity: 0.7 }} />
+                                            <span className="leading-relaxed">{ex.note}</span>
                                         </div>
                                     )}
 
                                     {/* Set Headers */}
                                     <div
-                                        className="grid gap-2 pb-2 text-[10px] text-[var(--color-text-secondary)] font-semibold tracking-wide text-center"
-                                        style={{ gridTemplateColumns: '36px 1fr 1fr 1fr' }}
+                                        className="grid gap-2 pb-2 text-[10px] text-[var(--color-text-muted)] font-semibold tracking-wider text-center uppercase"
+                                        style={{ gridTemplateColumns: '32px 1fr 1fr 1fr' }}
                                     >
-                                        <span>SET</span>
-                                        <span>WEIGHT</span>
-                                        <span>REPS</span>
-                                        <span>REST</span>
+                                        <span>#</span>
+                                        <span>Weight</span>
+                                        <span>Reps</span>
+                                        <span>Rest</span>
                                     </div>
 
                                     {/* Sets */}
@@ -218,14 +240,28 @@ export default function WorkoutDayPage() {
                                         return (
                                             <div
                                                 key={i}
-                                                className="grid gap-2 items-center py-1.5"
-                                                style={{ gridTemplateColumns: '36px 1fr 1fr 1fr' }}
+                                                className="grid gap-2 items-center py-1.5 rounded-lg transition-colors"
+                                                style={{
+                                                    gridTemplateColumns: '32px 1fr 1fr 1fr',
+                                                    background: hasData ? 'rgba(34, 197, 94, 0.04)' : 'transparent',
+                                                }}
                                             >
-                                                <div
-                                                    className="text-center text-[13px] font-bold"
-                                                    style={{ color: hasData ? '#4ADE80' : 'var(--color-text-secondary)' }}
-                                                >
-                                                    {hasData ? <Check size={16} className="mx-auto" /> : i + 1}
+                                                <div className="flex justify-center">
+                                                    {hasData ? (
+                                                        <div
+                                                            className="w-6 h-6 rounded-md flex items-center justify-center"
+                                                            style={{ background: 'rgba(34, 197, 94, 0.15)' }}
+                                                        >
+                                                            <Check size={14} style={{ color: '#22c55e' }} />
+                                                        </div>
+                                                    ) : (
+                                                        <span
+                                                            className="text-xs font-bold"
+                                                            style={{ color: '#52525b', fontFamily: 'var(--font-mono)' }}
+                                                        >
+                                                            {i + 1}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="flex justify-center">
                                                     <SetInput
@@ -258,17 +294,18 @@ export default function WorkoutDayPage() {
 
             {/* Finish Button */}
             {isWorkoutActive && (
-                <div className="px-4 mt-6">
+                <div className="px-5 mt-6">
                     <button
                         onClick={handleFinish}
-                        className="w-full py-4 rounded-xl text-base font-bold flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                         style={{
-                            background: 'linear-gradient(135deg, #4ADE80, #22C55E)',
-                            color: '#000',
+                            background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                            color: '#fff',
+                            boxShadow: '0 4px 20px rgba(34, 197, 94, 0.25)',
                         }}
                     >
                         <Check size={18} strokeWidth={3} />
-                        FINISH WORKOUT
+                        Finish Workout
                     </button>
                 </div>
             )}
